@@ -75,8 +75,7 @@ total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity
 # streamlit refresh data button
 if st.sidebar.button('Look for New Reports & Refresh Data'):
     new_download_count, total_download_count = functions.download_and_rename_files()
-    st.success(
-        'Data refreshed successfully! {new_download_count} new monthly report(s), {total_download_count} existing monthly report(s) loaded.')
+    st.success(f'Data refreshed successfully! {new_download_count} new monthly report(s), {total_download_count} existing monthly report(s) loaded.')
 
 # Construct Figure 0: Choropleth graph
 fig = go.Figure(

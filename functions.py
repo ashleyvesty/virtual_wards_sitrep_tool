@@ -1,27 +1,95 @@
 import os
+from datetime import datetime
+
 import geopandas
 import numpy as np
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import load_workbook
 
 HEADER_KEYWORD = 'Region'
 EXCEL_SHEET = 'Virtual Ward Data'
 FILE_PREFIX = 'VW'
 FILE_EXT = '.xlsx'
 LOCATION_DATA_FILE = './data/subICSLocations.csv'
-SHAPEFILE = 'shapefile/ICB_Shape.zip'
-GEOJSON_OUTPUT = './data/ICB2023.geojson'
+SHAPEFILE = './data/geodata/ICB_Shape.zip'
+GEOJSON_OUTPUT = './data/geodata/ICB2023.geojson'
 DATA_PATH = './data'
+DOWNLOAD_URL = 'https://www.england.nhs.uk/statistics/statistical-work-areas/virtual-ward/'
+
+
+def download_and_rename_files():
+    with requests.Session() as session:
+        response = requests.get(DOWNLOAD_URL)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        num_new_files_downloaded = 0
+        total_files_downloaded = 0
+
+        # create data directory if it does not exist
+        if not os.path.exists(DATA_PATH):
+            os.mkdir(DATA_PATH)
+
+        # find the links to the Excel files
+        for link in soup.select("a[href$='.xlsx']"):
+            file_url = link['href']
+
+            # skip the file download if the URL or filename contains 'Time-Series'
+            if 'Time-Series' in file_url:
+                continue
+
+            # download the Excel file
+            response = requests.get(file_url)
+            with open("temp.xlsx", "wb") as f:
+                f.write(response.content)
+            try:
+                # load the workbook and get the date from the first sheet
+                wb = load_workbook('temp.xlsx')
+                sheet = wb.get_sheet_by_name(wb.get_sheet_names()[1])
+                date_in_sheet = sheet['C6'].value
+
+                # format date into YYYYMM
+                date_in_sheet = datetime.strptime(date_in_sheet, '%B %Y')
+
+                # reformat the datetime object to the format YYYYMM
+                workbook_formatted_date = date_in_sheet.strftime("%Y%m")
+
+                # get net file name and path
+                new_file_path = f"{DATA_PATH}/VW{workbook_formatted_date}.xlsx"
+                if os.path.exists(new_file_path):
+                    os.remove(new_file_path)
+                num_new_files_downloaded += -1
+
+                # rename the file and move to downloaded directory
+                os.rename("temp.xlsx", new_file_path)
+
+                # increment the counter after successful download and rename operation
+                num_new_files_downloaded += 1
+                total_files_downloaded += 1
+            finally:
+                wb.close()
+
+        return num_new_files_downloaded, total_files_downloaded
+
+
+def _clean_column_names(df):
+    df.columns = df.columns.str[:25]  # truncates to the first 15 characters
+    df.columns = df.columns.str.strip()  # remove whitespace from both ends
+    df.columns = df.columns.str.lower()  # convert to lowercase
+    df.columns = df.columns.str.replace(' ', '_')  # replaces spaces with underscores
+    return df
+
 
 def load_data():
-    print(os.getcwd())
     all_data = pd.DataFrame()
+
     excel_files = [f for f in os.listdir(DATA_PATH) if f.startswith(FILE_PREFIX) and f.endswith(FILE_EXT)]
     # Iterate through the Excel files and extract the relevant data
     for file in excel_files:
         file_path = os.path.join(DATA_PATH, file)
         file_date = file.split(FILE_PREFIX)[1].split(FILE_EXT)[0]
-        xl = pd.ExcelFile(file_path)
-        df = pd.read_excel(xl, sheet_name=EXCEL_SHEET)
+        df = pd.read_excel(file_path, sheet_name=EXCEL_SHEET)
 
         # find the index of the row that contains the keyword
         header_index = df[df.apply(lambda row: row.astype(str).str.contains(HEADER_KEYWORD).any(), axis=1)].index[0]
@@ -37,38 +105,49 @@ def load_data():
         table_data = table_data[~(table_data == 'ENGLAND').any(axis=1)]
         table_data = table_data[~(table_data == 'ENGLAND*').any(axis=1)]
 
+        # drop columns that are not required
+        cols_to_drop = [table_data.columns[i] for i in [0, 6, 9]]
+        table_data.drop(cols_to_drop, axis=1, inplace=True)
+
+        # clean the column names to facilitate merging
+        table_data = _clean_column_names(table_data)
+
         # append data to all_data dataframe
         all_data = pd.concat([all_data, table_data])
         all_data.dropna(axis=1, how='all', inplace=True)
 
-    # clean all_data
-    all_data = all_data.apply(lambda x: x.strip() if isinstance(x, str) else x)
     # get columns based in their index for renaming
     cols = list(all_data.columns)
-    # Replace 'Occupancy %' with new calculated field
-    all_data[cols[8]] = all_data[cols[7]] / all_data[cols[4]].replace(0, np.nan)
+
     # set dtypes
     all_data = all_data.astype({
         cols[0]: 'object',
         cols[1]: 'object',
         cols[2]: 'object',
         cols[3]: 'object',
-        cols[4]: 'int64',
-        cols[5]: 'float64',
-        cols[6]: 'int64',
-        cols[7]: 'int64',
-        cols[8]: 'float64'})
+        cols[4]: 'Int64',
+        cols[5]: 'Int64',
+        cols[6]: 'Int64',
+        cols[7]: 'object'}
+    )
 
     # rename columns using dictionary
     rename_dict = {
+        cols[0]: 'Region',
+        cols[1]: 'Region_Code',
+        cols[2]: 'ICB_Code',
+        cols[3]: 'Name',
         cols[4]: 'Capacity',
-        cols[5]: 'Capacity_100k',
-        cols[6]: 'GP_Registered_Population',
-        cols[7]: 'Occupancy',
-        cols[8]: 'Occupancy_Percent'}
-
+        cols[5]: 'GP_Registered_Population',
+        cols[6]: 'Occupancy',
+        cols[7]: 'Date'}
     all_data.rename(columns=rename_dict, inplace=True)
-    all_data['Date'] = pd.to_datetime(all_data['Date'], format='%Y%m') + pd.offsets.MonthEnd(1)
+    # Set date field format and correct data
+    all_data['Date'] = pd.to_datetime(all_data['Date'], format='%Y%m')
+    all_data['Date'] = all_data['Date'].apply(lambda date: date.replace(day=1))
+
+    # Add 'Occupancy_Percent' with new calculated field
+    all_data['Occupancy_Percent'] = all_data['Occupancy'] / all_data['Capacity'].replace(0, np.nan)
 
     all_data.reset_index(drop=True, inplace=True)
 
@@ -87,11 +166,9 @@ def get_vw_dataset():
     ics_data['temp_location'] = ics_data['ICB_Name'].str.lower()
     merged_df = pd.merge(left=vw_data, right=ics_data, left_on='temp_name', right_on='temp_location', how='left')
 
-    # remove temporary columns and calculated columns that may be incorrect from final dataframe
+    # remove temporary columns
     del merged_df['temp_name']
     del merged_df['temp_location']
-    del merged_df['Capacity_100k']
-    del merged_df['Occupancy_Percent']
 
     # group and aggregate fields
     merged_df = merged_df.groupby(['Date', 'ICB23CD']).agg({
@@ -106,6 +183,9 @@ def get_vw_dataset():
     merged_df['Capacity_100k'] = (
                 merged_df['Capacity'] / merged_df['GP_Registered_Population'].replace(0, np.nan) * 100000).round(2)
     merged_df['Occupancy_Percent'] = (merged_df['Occupancy'] / merged_df['Capacity'].replace(0, np.nan) * 100).round(2)
+
+    # construct ICB23NMS which has shortened Integrated Care Board to ICB
+    merged_df['ICB23NMS'] = merged_df['ICB23NM'].str.slice(0, -21) + 'ICB'
 
     return merged_df
 

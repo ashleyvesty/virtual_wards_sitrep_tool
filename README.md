@@ -1,4 +1,8 @@
-A tool built using Streamlit and Python to assist viewing public NHS Virtual Ward SITREP data, containing information on virtual ward services in each Integrated Care Board (ICB) in England. It downloads the most recent SITREP reports directly from the NHS England website and combines them with location data.
+# Virtual Wards SITREP Tool
+A tool built using Streamlit and Python to assist viewing public NHS Virtual Ward SITREP data, containing information on virtual ward services for each Integrated Care Board (ICB) in England. It automates the download and processing of the most recent virtual wards SITREP reports, directly from the NHS England website, and combining with location based date for data visualisation.
+<br><br>
+<img src="https://github.com/user-attachments/assets/11c0e605-c671-478c-bd62-c618f9806945" width="800" height="600"/>
 
-Data sources: 
-NHS England https://www.england.nhs.uk/statistics/statistical-work-areas/virtual-ward/
+
+### Data sources: 
+<br> NHS England https://www.england.nhs.uk/statistics/statistical-work-areas/virtual-ward/

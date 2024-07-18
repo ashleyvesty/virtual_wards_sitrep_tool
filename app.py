@@ -55,11 +55,11 @@ else:
 icb_locations = sorted(vw_data['ICB23NMS'].unique().tolist())
 icb_locations_with_select_all = ['National View'] + icb_locations
 if view == "National Overview":
-    selected_location = 'National View'
+    selected_location = 'National'
 else:
     selected_location = st.sidebar.selectbox('Select an ICB Location', options=icb_locations_with_select_all)
 
-if selected_location != 'National View':
+if selected_location != 'National':
     filtered_data = vw_data[vw_data['ICB23NMS'] == selected_location]
 else:
     filtered_data = vw_data

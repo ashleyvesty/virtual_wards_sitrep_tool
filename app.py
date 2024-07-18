@@ -53,7 +53,7 @@ else:
 
 # streamlit select box for ICB, conditional on view
 icb_locations = sorted(vw_data['ICB23NMS'].unique().tolist())
-icb_locations_with_select_all = ['National View'] + icb_locations
+icb_locations_with_select_all = ['National'] + icb_locations
 if view == "National Overview":
     selected_location = 'National'
 else:

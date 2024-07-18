@@ -73,7 +73,8 @@ total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity
     'GP_Registered_Population'].replace(0, np.nan)) * 10000).round(2)
 
 # streamlit refresh data button
-if st.sidebar.button('Look for New Reports & Refresh Data'):
+st.sidebar.write("<br><br>")
+if st.sidebar.button('Check for New Reports & Refresh Data'):
     new_download_count, total_download_count = functions.download_and_rename_files()
     st.success(f'Data refreshed successfully! {new_download_count} new monthly report(s), {total_download_count} existing monthly report(s) loaded.')
 

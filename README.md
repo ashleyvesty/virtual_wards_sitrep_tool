@@ -1,5 +1,5 @@
 # Virtual Wards SITREP Tool
-An unofficial tool built using Python to assist viewing public NHS Virtual Wards Situation Report data (SitRep), a set of monthly reports containing information related to virtual ward activity for each Integrated Care Board (ICB) in England.<br><br> The tool automates the download and processing of the most recent virtual wards SITREP reports, downloading and extracting data directly from the NHS England website, and combining it with location based data for geographic visualisation.
+An unofficial tool built using Python to assist viewing public NHS Virtual Wards Situation Report data (SitRep), a set of monthly reports containing information related to virtual ward activity for each Integrated Care Board (ICB) in England.<br><br> The tool automates the download and processing of the most recent virtual wards SITREP reports, extracting data directly from the NHS England website, and combining it with location based data for geographic visualisation.
 <br>
 <br>
 Links to live demos:<br> 

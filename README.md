@@ -3,8 +3,8 @@ An unofficial tool built using Python to assist viewing public NHS Virtual Wards
 <br>
 <br>
 Links to live demos:<br> 
-[https://virtualward-sitrep.up.railway.app](https://virtualward-sitrep.up.railway.app) <br>
 [https://vwsitreps.streamlit.app/](https://vwsitreps.streamlit.app/) <br>
+[https://virtualward-sitrep.up.railway.app](https://virtualward-sitrep.up.railway.app) <br>
 <br><br>
 <img src="https://github.com/user-attachments/assets/11c0e605-c671-478c-bd62-c618f9806945" width="800" height="600"/>
 <br>

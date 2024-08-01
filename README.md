@@ -3,9 +3,9 @@ An unofficial tool built using Python to assist viewing public NHS Virtual Wards
 <br>
 <br>
 <b>Links to live demos:</b><br> 
-[https://vwsitreps.streamlit.app/](https://vwsitreps.streamlit.app/)* <br>
 [https://virtualward-sitrep.up.railway.app](https://virtualward-sitrep.up.railway.app)* <br>
-<br>In the event of an error, wait some seconds and refresh the page. This is to allow the demo to wake-up after a period of inactivity.
+[https://vwsitreps.streamlit.app/](https://vwsitreps.streamlit.app/)* <br>
+<br>In the event of an error, wait some seconds and refresh the page. <br>This is to allow the demo to wake-up after a period of inactivity.
 <br><br>
 <img src="https://github.com/user-attachments/assets/11c0e605-c671-478c-bd62-c618f9806945" width="800" height="600"/>
 <br>

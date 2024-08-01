@@ -1,3 +1,4 @@
+from pyspc import *
 import calendar
 import json
 import os
@@ -6,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import matplotlib.pyplot as plt
 import functions
 
 GEOJSON_PATH = "./data/geodata/ICB2023.geojson"
@@ -27,7 +29,7 @@ st.title("NHS Virtual Wards SITREP Data")
 st.sidebar.title('Selections')
 
 # streamlit views select box
-views = ["National Overview", "Time Series & ICB Performance"]
+views = ["National Overview", "Time Series & ICB Performance", "Statistical Process Charts"]
 view = st.sidebar.selectbox("Select a View", views)
 
 # instantiate date selection variable
@@ -61,16 +63,26 @@ else:
 
 if selected_location != 'National':
     filtered_data = vw_data[vw_data['ICB23NMS'] == selected_location]
+    occupancy_spc_data = filtered_data[['Occupancy', 'Date']]
+    occupancy_spc_data = occupancy_spc_data.groupby('Date').sum().reset_index()
+    occupancy_spc_data['Date_Rank'] = occupancy_spc_data['Date'].rank(method='dense').astype(int)
+    occupancy_spc_data = occupancy_spc_data.sort_values(by='Date_Rank').reset_index()
+    occupancy_spc_data = occupancy_spc_data.drop('Date', axis=1)
+    occupancy_spc_data = occupancy_spc_data.reindex(columns=['Date_Rank', 'Occupancy'])
+
 else:
     filtered_data = vw_data
+    occupancy_spc_data = filtered_data[['Occupancy', 'Date']]
+    occupancy_spc_data['Date_Rank'] = occupancy_spc_data['Date'].rank(method='dense').astype(int)
+    occupancy_spc_data = occupancy_spc_data.sort_values(by='Date_Rank').reset_index()
+    occupancy_spc_data = occupancy_spc_data.drop('Date', axis=1)
+    occupancy_spc_data = occupancy_spc_data.reindex(columns=['Date_Rank', 'Occupancy'])
 
 # created grouped dataframe for All_ICB selection
 total_occupancy_capacity = filtered_data.groupby('Date')[
     ['Occupancy', 'Capacity', 'GP_Registered_Population']].sum().reset_index()
-total_occupancy_capacity['Occupancy_Percent'] = ((total_occupancy_capacity['Occupancy'] / total_occupancy_capacity[
-    'Capacity'].replace(0, np.nan)) * 100).round(2)
-total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity'] / total_occupancy_capacity[
-    'GP_Registered_Population'].replace(0, np.nan)) * 10000).round(2)
+total_occupancy_capacity['Occupancy_Percent'] = ((total_occupancy_capacity['Occupancy'] / total_occupancy_capacity['Capacity'].replace(0, np.nan)) * 100).round(2)
+total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity'] / total_occupancy_capacity['GP_Registered_Population'].replace(0, np.nan)) * 100000).round(2)
 
 # streamlit refresh data button
 st.sidebar.write("")
@@ -243,7 +255,7 @@ if view == "National Overview":
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")
-else:
+elif view == "Time Series & ICB Performance":
     st.write("#### **Time Series & ICB Performance**")
     st.plotly_chart(fig2)
     st.plotly_chart(fig3)
@@ -252,6 +264,17 @@ else:
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")
+else:
+    st.write("#### **Statistical Control Process Charts**")
+    st.write("Occupancy SPC")
+    spc_chart = spc(occupancy_spc_data) + xmr()
+    spc_chart.save('chart1.png')
+    st.image('chart1.png')
+    st.write("Capacity SPC")
+
+
+
+
 
 
 

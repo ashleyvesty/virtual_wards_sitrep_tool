@@ -214,13 +214,13 @@ def calculate_topn(df, year, month, months_back, feature, top_x):
     # Calculate the difference in the feature value between the two months for each ICS
     value_increase = selected_month_value - prev_month_value
     # Calculate the increase percentage
-    value_increase_percent = round(value_increase / selected_month_value * 100, 2)
+    value_increase_percent = round(value_increase / prev_month_value * 100, 2)
     # Compute previous, current, and the difference in a DataFrame
     value_df = pd.DataFrame({
         f'Previous {feature}': prev_month_value,
         f'Current {feature}': selected_month_value,
         'Increase': value_increase,
-        'Percent Increase': value_increase_percent.apply('{:,.2f}'.format) + "%"
+        'Percentage Increase': value_increase_percent.apply('{:,.2f}'.format) + "%"
     })
     # Only retain the top X increased ICSs
     top_ics_df = value_df.nlargest(top_x, 'Increase')

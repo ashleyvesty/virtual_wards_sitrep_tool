@@ -188,9 +188,39 @@ def get_vw_dataset():
 
     return merged_df
 
-
 def convert_shape_to_json():
     shape_data = geopandas.read_file(SHAPEFILE)
     shape_data.to_crs(epsg=4326, inplace=True)
     shape_data.to_file(GEOJSON_OUTPUT, driver='GeoJSON')
     return GEOJSON_OUTPUT
+
+
+def calculate_capacity_increase(df, year, month):
+    # Filter data for the selected month and the month before
+    selected_month_data = df[(df['Date'].dt.year == year) &
+                             (df['Date'].dt.month == month)]
+    if month == 1:
+        prev_month_data = df[(df['Date'].dt.year == (year - 1)) &
+                             (df['Date'].dt.month == 12)]
+    else:
+        prev_month_data = df[(df['Date'].dt.year == year) &
+                             (df['Date'].dt.month == (month - 1))]
+
+    # Calculate the total capacity for each month for each ICS
+    selected_month_capacity = selected_month_data.groupby('ICB23NMS')['Capacity'].sum()
+    prev_month_capacity = prev_month_data.groupby('ICB23NMS')['Capacity'].sum()
+
+    # Calculate the difference in capacity between the two months for each ICS
+    capacity_increase = selected_month_capacity - prev_month_capacity
+
+    # Compute previous, current, and the difference in a DataFrame
+    capacity_df = pd.DataFrame({
+        'Previous Capacity': prev_month_capacity,
+        'Current Capacity': selected_month_capacity,
+        'Increase': capacity_increase
+    })
+
+    # Only retain the top 5 increased ICSs
+    top_ics_df = capacity_df.nlargest(5, 'Increase')
+
+    return top_ics_df

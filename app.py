@@ -72,6 +72,8 @@ total_occupancy_capacity['Occupancy_Percent'] = ((total_occupancy_capacity['Occu
 total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity'] / total_occupancy_capacity[
     'GP_Registered_Population'].replace(0, np.nan)) * 100000).round(2)
 
+
+
 # streamlit refresh data button
 st.sidebar.write("")
 st.sidebar.write("")
@@ -240,6 +242,9 @@ if view == "National Overview":
     st.plotly_chart(fig)
     st.write("\n")
     st.plotly_chart(fig1)
+    st.write("\n")
+    st.write(f"##### **Top 5 ICB With the Largest Capacity Increase in {formatted_date} from the Month Prior**")
+    st.table(functions.calculate_capacity_increase(vw_data, selected_date[0], selected_date[1]))
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")

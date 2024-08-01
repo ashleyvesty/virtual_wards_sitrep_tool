@@ -251,7 +251,6 @@ if view == "National Overview":
     st.write("\n")
     st.write(f"##### **Top 5 Largest Absolute Capacity Increase in {formatted_date} from the Month Prior**")
     st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 1, 'Capacity', 5))
-    st.write("\n")
     st.write(f"##### **Top 5 Largest Absolute Capacity Increase in {formatted_date} from 6 Months Prior**")
     st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 6, 'Capacity', 5))
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")

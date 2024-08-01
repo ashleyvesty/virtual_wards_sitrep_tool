@@ -70,7 +70,7 @@ total_occupancy_capacity = filtered_data.groupby('Date')[
 total_occupancy_capacity['Occupancy_Percent'] = ((total_occupancy_capacity['Occupancy'] / total_occupancy_capacity[
     'Capacity'].replace(0, np.nan)) * 100).round(2)
 total_occupancy_capacity['Capacity_100k'] = ((total_occupancy_capacity['Capacity'] / total_occupancy_capacity[
-    'GP_Registered_Population'].replace(0, np.nan)) * 10000).round(2)
+    'GP_Registered_Population'].replace(0, np.nan)) * 100000).round(2)
 
 # streamlit refresh data button
 st.sidebar.write("")

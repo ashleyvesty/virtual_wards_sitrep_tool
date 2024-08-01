@@ -122,7 +122,7 @@ fig1 = go.Figure(
         text=vw_data_time_filtered['ICB23NMS'],
         colorscale='RdYlGn',
         zmin=0,
-        zmax=20,
+        zmax=40,
         hovertemplate=(
             '<b>%{text}</b><br>'
             '<extra><b><br><br>%{z}</b></extra>'

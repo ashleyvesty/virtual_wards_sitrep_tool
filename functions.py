@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import geopandas
 import numpy as np
 import pandas as pd
@@ -195,32 +196,32 @@ def convert_shape_to_json():
     return GEOJSON_OUTPUT
 
 
-def calculate_capacity_increase(df, year, month):
-    # Filter data for the selected month and the month before
+def calculate_topn(df, year, month, months_back, feature, top_x):
+    # Convert the year and month to a datetime
+    selected_date = datetime(year=year, month=month, day=1)
+    # Calculate the date months_back months ago
+    prev_date = selected_date - relativedelta(months=months_back)
+    prev_month = prev_date.month
+    prev_year = prev_date.year
+    # Filter data for the selected month and the month months_back months ago
     selected_month_data = df[(df['Date'].dt.year == year) &
                              (df['Date'].dt.month == month)]
-    if month == 1:
-        prev_month_data = df[(df['Date'].dt.year == (year - 1)) &
-                             (df['Date'].dt.month == 12)]
-    else:
-        prev_month_data = df[(df['Date'].dt.year == year) &
-                             (df['Date'].dt.month == (month - 1))]
-
-    # Calculate the total capacity for each month for each ICS
-    selected_month_capacity = selected_month_data.groupby('ICB23NMS')['Capacity'].sum()
-    prev_month_capacity = prev_month_data.groupby('ICB23NMS')['Capacity'].sum()
-
-    # Calculate the difference in capacity between the two months for each ICS
-    capacity_increase = selected_month_capacity - prev_month_capacity
-
+    prev_month_data = df[(df['Date'].dt.year == prev_year) &
+                         (df['Date'].dt.month == prev_month)]
+    # Calculate the total value of the feature for each month for each ICS
+    selected_month_value = selected_month_data.groupby('ICB23NMS')[feature].sum()
+    prev_month_value = prev_month_data.groupby('ICB23NMS')[feature].sum()
+    # Calculate the difference in the feature value between the two months for each ICS
+    value_increase = selected_month_value - prev_month_value
+    # Calculate the increase percentage
+    value_increase_percent = round(value_increase / selected_month_value * 100, 2)
     # Compute previous, current, and the difference in a DataFrame
-    capacity_df = pd.DataFrame({
-        'Previous Capacity': prev_month_capacity,
-        'Current Capacity': selected_month_capacity,
-        'Increase': capacity_increase
+    value_df = pd.DataFrame({
+        f'Previous {feature}': prev_month_value,
+        f'Current {feature}': selected_month_value,
+        'Increase': value_increase,
+        'Percent Increase': value_increase_percent.apply('{:,.2f}'.format) + "%"
     })
-
-    # Only retain the top 5 increased ICSs
-    top_ics_df = capacity_df.nlargest(5, 'Increase')
-
+    # Only retain the top X increased ICSs
+    top_ics_df = value_df.nlargest(top_x, 'Increase')
     return top_ics_df

@@ -9,6 +9,8 @@ import streamlit as st
 import functions
 
 GEOJSON_PATH = "./data/geodata/ICB2023.geojson"
+# Set pandas display option
+pd.options.display.float_format = '{:,.2f}'.format
 
 # load virtual ward data
 vw_data = pd.DataFrame(functions.get_vw_dataset())
@@ -239,12 +241,19 @@ fig5.update_traces(hovertemplate='Date: %{customdata}<br>Value: %{y}')
 
 # conditional rules for which plots to chart based on selected view
 if view == "National Overview":
+    st.write("#### **Occupancy**")
     st.plotly_chart(fig)
+    st.write(f"##### **Top 5 ICB With the Largest Occupancy Increase in {formatted_date} from the Month Prior**")
+    st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 1, 'Occupancy', 5))
     st.write("\n")
+    st.write("#### **Capacity**")
     st.plotly_chart(fig1)
     st.write("\n")
     st.write(f"##### **Top 5 ICB With the Largest Capacity Increase in {formatted_date} from the Month Prior**")
-    st.table(functions.calculate_capacity_increase(vw_data, selected_date[0], selected_date[1]))
+    st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 1, 'Capacity', 5))
+    st.write("\n")
+    st.write(f"##### **Top 5 ICB With the Largest Capacity Increase in {formatted_date} from 6 Months Prior**")
+    st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 6, 'Capacity', 5))
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")

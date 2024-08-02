@@ -264,7 +264,7 @@ elif view == "Time Series & ICB Performance":
     st.plotly_chart(fig3)
     st.plotly_chart(fig4)
     st.plotly_chart(fig5)
-    st.write("\n#### **Capacity**")
+    st.write("\n#### **Notes**")
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")

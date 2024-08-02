@@ -277,7 +277,7 @@ else:
     unique_ICB = pivot_data['ICB23NM'].unique()
     unique_ICB = np.sort(unique_ICB)
     # Reformat date field
-    pivot_data['Date'] = vw_data_time_filtered['Date'].dt.strftime('%d-%B-%Y')
+    pivot_data['Date'] = vw_data_time_filtered['Date'].dt.strftime('%B-%Y')
     # Iterate through the ICB and plot the table
     for icb in unique_ICB:
         table_data = pivot_data[pivot_data['ICB23NM'] == icb]

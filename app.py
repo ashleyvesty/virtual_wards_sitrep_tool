@@ -271,20 +271,42 @@ elif view == "Time Series & ICB Performance":
 
 else:
     st.write("#### **Pivot View**")
-    pivot_data = filtered_data[['ICB23NM', 'Date', 'Capacity', 'Occupancy', 'GP_Registered_Population', 'Occupancy_Percent' ]]
+    # Pivot Source
+    pivot_data = filtered_data[['ICB23NMS', 'Date', 'Capacity', 'Occupancy', 'GP_Registered_Population', 'Occupancy_Percent']]
     pivot_data = pivot_data.round(2)
     # Identify unique ICB list and sort
-    unique_ICB = pivot_data['ICB23NM'].unique()
+    unique_ICB = pivot_data['ICB23NMS'].unique()
     unique_ICB = np.sort(unique_ICB)
-    # Reformat date field
-    pivot_data['Date'] = vw_data_time_filtered['Date'].dt.strftime('%B-%Y')
+
+    if selected_location == 'National':
+        # Plot the national aggregated table
+        table_data_nat = pivot_data
+        table_data_nat.drop('ICB23NMS', axis=1, inplace=True)
+        table_data_nat.drop('Occupancy_Percent', axis=1, inplace=True)
+        table_data_nat = table_data_nat.groupby('Date').agg({
+            'Capacity': 'sum',
+            'Occupancy': 'sum',
+            'GP_Registered_Population': 'sum',
+        })
+        table_data_nat['Occupancy_Percent'] = (table_data_nat['Occupancy'] / table_data_nat['Capacity']) * 100
+        table_data_nat = table_data_nat.applymap(lambda x: '{0:.2f}'.format(x) if isinstance(x, float) else x)
+        pivot_table_nat = pd.pivot_table(table_data_nat, index='Date', aggfunc='sum').T.sort_index(axis=1, ascending=False)
+
+        # Reformat date field
+        pivot_table_nat.columns = pivot_table_nat.columns.strftime('%B-%Y')
+        st.write(f"###### **National**")
+        st.table(pivot_table_nat)
+    else:
+        pass
+    pivot_data = filtered_data[['ICB23NMS', 'Date', 'Capacity', 'Occupancy', 'GP_Registered_Population', 'Occupancy_Percent']]
     # Iterate through the ICB and plot the table
     for icb in unique_ICB:
-        table_data = pivot_data[pivot_data['ICB23NM'] == icb]
-        table_data.drop('ICB23NM', axis=1, inplace=True)
+        table_data = pivot_data[pivot_data['ICB23NMS'] == icb]
+        table_data.drop('ICB23NMS', axis=1, inplace=True)
         table_data = table_data.applymap(lambda x: '{0:.2f}'.format(x) if isinstance(x, float) else x)
         pivot_table = pd.pivot_table(table_data, index='Date', aggfunc='sum').T.sort_index(axis=1, ascending=False)
+        # Reformat date field
+        pivot_table.columns = pivot_table.columns.strftime('%B-%Y')
         st.write(f"###### **{icb}**")
         st.table(pivot_table)
-
 

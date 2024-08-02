@@ -29,7 +29,7 @@ st.title("NHS Virtual Wards SITREP Data")
 st.sidebar.title('Selections')
 
 # streamlit views select box
-views = ["National Overview", "Time Series & ICB Performance"]
+views = ["National Overview", "Time Series & ICB Performance", "Pivot View"]
 view = st.sidebar.selectbox("Select a View", views)
 
 # instantiate date selection variable
@@ -253,18 +253,38 @@ if view == "National Overview":
     st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 1, 'Capacity', 5))
     st.write(f"##### **Top 5 Largest Absolute Capacity Increases in {formatted_date} from 6 Months Prior**")
     st.table(functions.calculate_topn(vw_data, selected_date[0], selected_date[1], 6, 'Capacity', 5))
+    st.write("\n#### **Notes**")
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")
-else:
+
+elif view == "Time Series & ICB Performance":
     st.write("#### **Time Series & ICB Performance**")
     st.plotly_chart(fig2)
     st.plotly_chart(fig3)
     st.plotly_chart(fig4)
     st.plotly_chart(fig5)
+    st.write("\n#### **Capacity**")
     st.write("Note 1: GP registered population does not include patients less than 16 years old prior to April 2024.")
     st.write("Note 2: The data contains the number of patients on a virtual ward, at 8am Thursday prior to the sitrep submission period. For example, 8am Thursday 23rd May 2024 for May 2024 published data.")
     st.write("More information regarding virtual wards can be found on the NHS England website: https://www.england.nhs.uk/virtual-wards/")
 
+else:
+    st.write("#### **Pivot View**")
+    pivot_data = filtered_data[['ICB23NM', 'Date', 'Capacity', 'Occupancy', 'GP_Registered_Population', 'Occupancy_Percent' ]]
+    pivot_data = pivot_data.round(2)
+    # Identify unique ICB list and sort
+    unique_ICB = pivot_data['ICB23NM'].unique()
+    unique_ICB = np.sort(unique_ICB)
+    # Reformat date field
+    pivot_data['Date'] = vw_data_time_filtered['Date'].dt.strftime('%d-%B-%Y')
+    # Iterate through the ICB and plot the table
+    for icb in unique_ICB:
+        table_data = pivot_data[pivot_data['ICB23NM'] == icb]
+        table_data.drop('ICB23NM', axis=1, inplace=True)
+        table_data = table_data.applymap(lambda x: '{0:.2f}'.format(x) if isinstance(x, float) else x)
+        pivot_table = pd.pivot_table(table_data, index='Date', aggfunc='sum').T.sort_index(axis=1, ascending=False)
+        st.write(f"###### **{icb}**")
+        st.table(pivot_table)
 
 

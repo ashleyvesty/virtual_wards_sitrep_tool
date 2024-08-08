@@ -59,7 +59,7 @@ def download_and_rename_files():
                 new_file_path = f"{DATA_PATH}/VW{workbook_formatted_date}.xlsx"
                 if os.path.exists(new_file_path):
                     os.remove(new_file_path)
-                num_new_files_downloaded += -1
+                    num_new_files_downloaded += -1
 
                 # rename the file and move to downloaded directory
                 os.rename("temp.xlsx", new_file_path)

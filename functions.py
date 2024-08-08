@@ -119,6 +119,11 @@ def load_data():
     # get columns based in their index for renaming
     cols = list(all_data.columns)
 
+    # replace non-numeric values in numeric fields with NaN
+    all_data[cols[4]] = all_data[cols[4]].apply(safe_convert)
+    all_data[cols[5]] = all_data[cols[5]].apply(safe_convert)
+    all_data[cols[6]] = all_data[cols[6]].apply(safe_convert)
+
     # set dtypes
     all_data = all_data.astype({
         cols[0]: 'object',
@@ -181,13 +186,14 @@ def get_vw_dataset():
 
     # replace calculated fields
     merged_df['Capacity_100k'] = (
-                merged_df['Capacity'] / merged_df['GP_Registered_Population'].replace(0, np.nan) * 100000).round(2)
+            merged_df['Capacity'] / merged_df['GP_Registered_Population'].replace(0, np.nan) * 100000).round(2)
     merged_df['Occupancy_Percent'] = (merged_df['Occupancy'] / merged_df['Capacity'].replace(0, np.nan) * 100).round(2)
 
     # construct ICB23NMS which has shortened Integrated Care Board to ICB
     merged_df['ICB23NMS'] = merged_df['ICB23NM'].str.slice(0, -21) + 'ICB'
 
     return merged_df
+
 
 def convert_shape_to_json():
     shape_data = geopandas.read_file(SHAPEFILE)
@@ -225,3 +231,10 @@ def calculate_topn(df, year, month, months_back, feature, top_x):
     # Only retain the top X increased ICSs
     top_ics_df = value_df.nlargest(top_x, 'Increase')
     return top_ics_df
+
+
+def safe_convert(val):
+    try:
+        return float(val)
+    except ValueError:
+        return np.nan
